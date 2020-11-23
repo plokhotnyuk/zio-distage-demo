@@ -31,7 +31,13 @@ object Main extends App {
             CheckResp.apply)
           .either
           .provide(env)
-      }: HttpRoutes[Task]) <+>
+      }: HttpRoutes[Task]) <+> add.toRoutes { req =>
+        Logic.>.add(req.items)
+          .bimap(
+            _ continue new LogicErr.AsFailureResp with SearchErr.AsFailureResp {},
+            _ => AddResp("ok"))
+          .either.provide(env)
+      } <+>
         new SwaggerHttp4s(docs.toYaml).routes)
     )
   } yield router
